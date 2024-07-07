@@ -1,22 +1,28 @@
-import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
-import { getPgVersion } from './neon'
-const app = new Hono()
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+import { init } from "./db/init";
+import AuthRoute from "./api/auth/auth.route";
+const app = new Hono();
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+app.get("/", (c) => {
+	return c.text("Hello Hono!");
+});
 
-const port = 3000
-console.log(`Server is running on port ${port}`)
+const port = 3000;
+console.log(`Server is running on port ${port}`);
 
-getPgVersion().then(() => {
-  console.log('Postgres is connected')
-}, (err) => {
-  console.error(err)
-})
+init()
+	.then(() => {
+		console.info("Tables were successfully initialized.");
+	})
+	.catch((err) => {
+		console.error(err);
+	});
+
+// Register the hono instance with the AuthRoute
+app.route("/auth", AuthRoute);
 
 serve({
-  fetch: app.fetch,
-  port
-})
+	fetch: app.fetch,
+	port,
+});
